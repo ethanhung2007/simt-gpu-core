@@ -4,8 +4,8 @@
 
 - `ADD rd, rs1, rs2`              -- integer add
 - `MUL rd, rs1, rs2`              -- integer multiply
-- `LDG rd, \[base+offset\]`       -- global load (coalesced)
-- `STG rs, \[base+offset\]`       -- global store
+- `LDG rd, [base+offset]`         -- global load (coalesced)
+- `STG rs, [base+offset]`         -- global store
 - `BRA target`                    -- uniform branch (all lanes same)
 - `PRED p, rs1, rs2, cond`        -- set predicate register
 - `@p BRA target, reconv`         -- divergent branch (enters SIMT stack)
@@ -60,20 +60,19 @@
 ### P-Type (PRED):
 
 ```text 
-31        28 27      25 24        20 19        15 14    12 11   0
+31         28 27      25 24        20 19        15 14    12 11   0
 +------------+----------+------------+------------+--------+------+
 |   opcode   |    p     |    rs1     |    rs2     |  cond  |unused|
 +------------+----------+------------+------------+--------+------+
-
 ```
 
 ### PB-Type (@p BRA):
 
 ```text 
-31        28 27      25 24                  13 12              1 0
-+------------+----------+----------------------+----------------+--+
-|   opcode   |    p     |     target_off12     |  reconv_off12  |u |
-+------------+----------+----------------------+----------------+--+
+31        28 27      25 24                   13 12              1  0
++------------+----------+----------------------+----------------+---+
+|   opcode   |    p     |     target_off12     |  reconv_off12  | u |
++------------+----------+----------------------+----------------+---+
 ```
 
 ### I-Type (MOV):
@@ -95,3 +94,5 @@
 ```
 
 ## Instruction Semantics
+
+

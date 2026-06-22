@@ -1,1 +1,55 @@
-.
+# ── Python (assembler + golden model) ──
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# ── Build artifacts / generated files ──
+build/
+*.hex          
+*.bin
+
+# ── Waveforms (regenerate from sims, can be huge) ──
+*.vcd
+*.fst
+*.ghw
+*.wlf
+*.wdb
+
+# ── Vivado / Xilinx ──
+*.jou
+*.log
+*.str
+*.backup.*
+.Xil/
+.cache/
+*.cache/
+vivado*.zip
+synth/*.runs/
+synth/*.sim/
+synth/*.gen/
+synth/*.hw/
+synth/*.ip_user_files/
+synth/*.srcs/sources_1/ip/
+usage_statistics_webtalk.*
+
+# ── ModelSim / Questa ──
+work/
+transcript
+vsim.wlf
+modelsim.ini
+*.vstf
+
+# ── Verilator (if you add it in Phase 5) ──
+obj_dir/
+
+# ── Icarus Verilog ──
+*.vvp
+
+# ── Editor / OS ──
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
