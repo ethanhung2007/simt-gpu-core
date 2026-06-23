@@ -2,7 +2,7 @@
 
 ## Overview
 
-The WARP ISA is a 32-bit wide ISA with 32 regular and 8 predicate registers. There are currently 9 instructions that use 4 bit opcodes. Additional registers include PC, am (active mask), and sp (stack pointer). Each warp also supports 8 lanes (hence am register is 8 bits wide). 
+The WARP ISA is a 32-bit wide ISA with 32 regular and 8 predicate registers. There are currently 10 instructions that use 4 bit opcodes. Additional registers include PC, am (active mask), and sp (stack pointer). Each warp also supports 8 lanes (hence am register is 8 bits wide). 
 
 ## Instruction Set Summary
 
@@ -36,12 +36,12 @@ for each active lane i:
    rd[i] = (rs1[i] * rs2[i])[31:0]
 
 Example:
-MUL R2, R1, R0    ; R2 = (R1 * R0)[31:0]
+MUL R2, R1, R0    ; R2[i] = (R1[i] * R0[i])[31:0]
 ```
 
 ### LDG
 
-```text
+```tex
 Direct global-memory load into a register.
 
 Format:
@@ -100,7 +100,7 @@ PRED p, rs1, rs2, cond
 
 Semantics:
 for each active lane i:
-  p[i] = compare(rs1, rs2, cond)
+  p[i] = compare(rs1[i], rs2[i], cond)
 
 Inactive lanes set p[i] = 0.
 
@@ -121,17 +121,23 @@ target_pc = PC + target_offset
 fallthrough_pc = PC + 1
 reconv_pc = PC + reconv_offset
 
-for each active lane i:
-  if p[i] = 1:
-    lane i takes target_pc
-  else:
-    lane i takes fallthrough_pc
+taken_mask = am & p
+fallthrough_mask = am & ~p 
 
-if some active lanes are true and some are false:
-  the warp diverges
-  true conditions lanes become active path
-  false condition path is pushed onto SIMT stack
-  reconv_pc is stored as the reconvergence point
+if taken_mask == 0:
+  PC = fallthrough_pc
+if fallthrough_mask == 0:
+  PC = target_pc
+else:
+  am = taken_mask
+  push entry {
+    deferred_valid = 1
+    deferred_pc = fallthrough_pc
+    deferred_mask = fallthrough_mask
+    reconv_pc
+    reconv_mask = am
+  }
+  PC = target_pc
 
 Example:
 @p0 BRA 25, 20    
@@ -146,10 +152,14 @@ Format:
 RCNV
 
 Semantics:
-if stack top has deferred path not yet executed:
-  switch to deferred_pc and deferred_mask
+if deferred_valid == 1:
+  PC = deferred_pc
+  am = deferred_mask
+  deferred_valid = 0
 else:
-  restore reconv_pc and reconv_mask
+  PC = reconv_pc
+  am = reconv_mask
+  pop entry from SIMT stack
 
 Example: 
 RCNV    ; switch to deferred path or reconverge the warp
@@ -280,4 +290,9 @@ entry1 {
   reconv_pc (32 bits)
   reconv_mask (8 bits)
 }
+```
+
+### Immediate Values
+```text
+Assume that all immediate values are sign extended.
 ```
