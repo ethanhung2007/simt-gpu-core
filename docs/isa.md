@@ -1,17 +1,192 @@
 # WARP ISA
 
+## Overview
+
+The WARP ISA is a 32-bit wide ISA with 32 regular and 8 predicate registers. There are currently 9 instructions that use 4 bit opcodes. Additional registers include PC, am (active mask), and sp (stack pointer). Each warp also supports 8 lanes (hence am register is 8 bits wide). 
+
 ## Instruction Set Summary
 
-- `ADD rd, rs1, rs2`              -- integer add
-- `MUL rd, rs1, rs2`              -- integer multiply
-- `LDG rd, [base+offset]`         -- global load (coalesced)
-- `STG rs, [base+offset]`         -- global store
-- `BRA target`                    -- uniform branch (all lanes same)
-- `PRED p, rs1, rs2, cond`        -- set predicate register
-- `@p BRA target, reconv`         -- divergent branch (enters SIMT stack)
-- `RCNV`                          -- reconverge divergent warp using SIMT stack
-- `MOV rd, imm`                   -- load immediate
-- `EXIT`                          -- terminate warp
+### ADD 
+
+```text 
+Direct integer add. 
+
+Format:
+ADD rd, rs1, rs2
+
+Semantics:
+for each active lane i:
+   rd[i] = rs1[i] + rs2[i]
+
+
+Example:
+ADD R2, R1, R0    ; R2[i] = R1[i] + R0[i]
+```
+
+### MUL
+
+```text
+Direct integer multiply, keeping the lower 32 bits. 
+
+Format:
+MUL rd, rs1, rs2
+
+Semantics:
+for each active lane i:
+   rd[i] = (rs1[i] * rs2[i])[31:0]
+
+Example:
+MUL R2, R1, R0    ; R2 = (R1 * R0)[31:0]
+```
+
+### LDG
+
+```text
+Direct global-memory load into a register.
+
+Format:
+LDG rd, imm(rb)
+
+Semantics:
+for each active lane i:
+  rd[i] = global_mem[rb[i] + imm]
+
+Inactive lanes do not perform memory access.
+
+Example:
+LDG R2, 5(R1)    ; R2[i] = global_mem[R1[i] + 5]
+```
+
+### STG
+
+```text
+Direct global-memory store from a register.
+
+Format:
+STG rs, imm(rb)
+
+Semantics:
+for each active lane i:
+  global_mem[rb[i] + imm] = rs[i] 
+
+Inactive lanes do not perform memory access.
+
+Example:
+STG R2, 5(R1)    ; global_mem[R1[i] + 5] = R2[i]
+```
+
+### BRA
+
+```text
+Unconditional PC-relative branch. 
+
+Format:
+BRA pc_offset
+
+Semantics:
+PC += pc_offset
+
+Example:
+BRA 30    ; PC += 30
+```
+
+### PRED
+
+```text
+Compares two values with a relational operator and writes a predicate register. Conditions include less than (LT), greater than (GT), and equal to (EQ). 
+
+Format:
+PRED p, rs1, rs2, cond
+
+Semantics:
+for each active lane i:
+  p[i] = compare(rs1, rs2, cond)
+
+Inactive lanes set p[i] = 0.
+
+Example:
+PRED p0, R0, R1, LT    ; p[i] = R0[i] < R1[i]
+```
+
+### @p BRA
+
+```text
+Conditionally branches to PC-relative offset based on predicate register. If active lanes disagree on predicate value, the warp diverges and the deferred path is pushed onto SIMT stack.
+
+Format:
+@p BRA target_offset, reconv_offset
+
+Semantics:
+target_pc = PC + target_offset
+fallthrough_pc = PC + 1
+reconv_pc = PC + reconv_offset
+
+for each active lane i:
+  if p[i] = 1:
+    lane i takes target_pc
+  else:
+    lane i takes fallthrough_pc
+
+if some active lanes are true and some are false:
+  the warp diverges
+  true conditions lanes become active path
+  false condition path is pushed onto SIMT stack
+  reconv_pc is stored as the reconvergence point
+
+Example:
+@p0 BRA 25, 20    
+```
+
+### RCNV
+
+```text
+Reconverges the diverged paths using SIMT stack.
+
+Format:
+RCNV
+
+Semantics:
+if stack top has deferred path not yet executed:
+  switch to deferred_pc and deferred_mask
+else:
+  restore reconv_pc and reconv_mask
+
+Example: 
+RCNV    ; switch to deferred path or reconverge the warp
+```
+
+### MOV
+
+```text
+Loads an immediate value into the given register.
+
+Format:
+MOV rd, imm
+
+Semantics:
+For each active lane i:
+  rd[i] = imm
+
+Example:
+MOV R0, 20    ; R0[i] = 20
+```
+
+### EXIT
+
+```text
+Terminates the currently active lanes.
+
+Format:
+EXIT
+
+Semantics:
+For each active lane i:
+  am[i] = 0
+
+Example:
+EXIT    ; terminate all currently active lanes
+
+```
 
 ## Opcode Table
 
@@ -40,36 +215,34 @@
 ```
 
 ### M-Type (LDG, STG):
-
 ```text 
-31        28 27        23 22        18 17                      0
+31         28 27        23 22        18 17                       0
 +------------+------------+------------+-------------------------+
-|   opcode   |  rd / rs   |    base    |      PCoffset18         |
+|   opcode   |  rd / rs   |     rb     |         imm18           |
 +------------+------------+------------+-------------------------+
 ```
 
 ### B-Type (BRA):
 
 ```text 
-31        28 27                                                0
+31         28 27                                                0
 +------------+--------------------------------------------------+
-|   opcode   |                    PCoffset28                    |
+|   opcode   |                       imm28                      |
 +------------+--------------------------------------------------+
 ```
 
 ### P-Type (PRED):
 
 ```text 
-31         28 27      25 24        20 19        15 14    12 11   0
+31         28 27      25 24        20 19        15 14    12 11    0
 +------------+----------+------------+------------+--------+------+
 |   opcode   |    p     |    rs1     |    rs2     |  cond  |unused|
 +------------+----------+------------+------------+--------+------+
-```
+#```
 
 ### PB-Type (@p BRA):
-
 ```text 
-31        28 27      25 24                   13 12              1  0
+31         28 27      25 24                  13 12              1   0
 +------------+----------+----------------------+----------------+---+
 |   opcode   |    p     |     target_off12     |  reconv_off12  | u |
 +------------+----------+----------------------+----------------+---+
@@ -78,21 +251,33 @@
 ### I-Type (MOV):
 
 ```text 
-31        28 27      25 24                                     0
+31         28 27      23 22                                     0
 +------------+----------+---------------------------------------+
-|   opcode   |    rd    |                 imm24                 |
+|   opcode   |    rd    |                 imm22                 |
 +------------+----------+---------------------------------------+
 ```
 
 ### Z-Type (RCNV, EXIT):
 
 ```text 
-31        28 27                                                0
+31         28 27                                                0
 +------------+--------------------------------------------------+
 |   opcode   |                     unused                       |
 +------------+--------------------------------------------------+
 ```
 
-## Instruction Semantics
+## Additional Notes
 
+### SIMT Stack Entry Specifics
 
+```text
+For each stack entry, the format below should be used:
+
+entry1 {
+  deferred_valid (1 bit)
+  deferred_pc (32 bits)
+  deferred_mask (8 bits)
+  reconv_pc (32 bits)
+  reconv_mask (8 bits)
+}
+```
