@@ -126,7 +126,7 @@ fallthrough_mask = am & ~p
 
 if taken_mask == 0:
   PC = fallthrough_pc
-if fallthrough_mask == 0:
+else if fallthrough_mask == 0:
   PC = target_pc
 else:
   am = taken_mask
@@ -263,7 +263,7 @@ EXIT    ; terminate all currently active lanes
 ```text 
 31         28 27      23 22                                     0
 +------------+----------+---------------------------------------+
-|   opcode   |    rd    |                 imm22                 |
+|   opcode   |    rd    |                 imm23                 |
 +------------+----------+---------------------------------------+
 ```
 
