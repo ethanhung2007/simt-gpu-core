@@ -129,7 +129,6 @@ if taken_mask == 0:
 else if fallthrough_mask == 0:
   PC = target_pc
 else:
-  am = taken_mask
   push entry {
     deferred_valid = 1
     deferred_pc = fallthrough_pc
@@ -137,6 +136,7 @@ else:
     reconv_pc
     reconv_mask = am
   }
+  am = taken_mask
   PC = target_pc
 
 Example:
