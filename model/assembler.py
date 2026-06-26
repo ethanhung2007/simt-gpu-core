@@ -68,9 +68,10 @@ def pass2(symbolTable, instrLines):
           hexLine = f"{int(f"{opcode:04b}{rd_rs:05b}{rb:05b}{imm:018b}", 2):08x}"
           print(hexLine)
         case 4:
+          mask = (1 << 28) - 1
           targ = line[1].lower()
           offset = symbolTable.get(targ) - lineNums
-          hexLine = f"{int(f"{opcode:04b}{offset:028b}", 2):08x}"
+          hexLine = f"{int(f"{opcode:04b}{offset & mask:028b}", 2):08x}"
           print(hexLine)
         case 5:
           p = int(line[1][1])
@@ -80,39 +81,30 @@ def pass2(symbolTable, instrLines):
           hexLine = f"{int(f"{opcode:04b}{p:03b}{rs1:05b}{rs2:05b}{cond:03b}{0:012b}", 2):08x}"
           print(hexLine)
         case 6:
+          mask = (1 << 12) - 1
           p = int(line[1][1])
           targ = line[2].lower()
           targ_offset = symbolTable.get(targ) - lineNums
           rcnv = line[3].lower()
           rcnv_offset = symbolTable.get(rcnv) - lineNums
-          hexLine = f"{int(f"{opcode:04b}{p:03b}{targ_offset:012b}{rcnv_offset:012b}{0:01b}", 2):08x}"
+          hexLine = f"{int(f"{opcode:04b}{p:03b}{targ_offset & mask:012b}{rcnv_offset & mask:012b}{0:01b}", 2):08x}"
           print(hexLine)
-        case 7:
+        case 8:
           rd = int(line[1][1])
           imm = int(line[2])
           hexLine = f"{int(f"{opcode:04b}{rd:05b}{imm:023b}", 2):08x}"
           print(hexLine)
-        case 8 | 9:
+        case 7 | 9:
           hexLine = f"{int(f"{opcode:04b}{0:028b}", 2):08x}"
           print(hexLine)
 
-
-
-
-
-        
-
       lineNums += 1
 
-
-
-
-    
 
 # def main():
 
  
 
 # TESTING
-a, b = pass1("unit_test.asm")
+a, b = pass1("test.asm")
 pass2(a, b)
