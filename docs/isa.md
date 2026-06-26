@@ -81,13 +81,13 @@ STG R2, 5(R1)    ; global_mem[R1[i] + 5] = R2[i]
 Unconditional PC-relative branch. 
 
 Format:
-BRA pc_offset
+BRA symbol 
 
 Semantics:
 PC += pc_offset
 
 Example:
-BRA 30    ; PC += 30
+BRA LOOP    ; PC += 30
 ```
 
 ### PRED
@@ -98,23 +98,28 @@ Compares two values with a relational operator and writes a predicate register. 
 Format:
 PRED p, rs1, rs2, cond
 
+LT = 001
+EQ = 010
+GT = 100
+
 Semantics:
 for each active lane i:
   p[i] = compare(rs1[i], rs2[i], cond)
 
 Inactive lanes set p[i] = 0.
 
+
 Example:
 PRED p0, R0, R1, LT    ; p[i] = R0[i] < R1[i]
 ```
 
-### @p BRA
+### BRAP 
 
 ```text
 Conditionally branches to PC-relative offset based on predicate register. If active lanes disagree on predicate value, the warp diverges and the deferred path is pushed onto SIMT stack.
 
 Format:
-@p BRA target_offset, reconv_offset
+BRAP p, target, reconv
 
 Semantics:
 target_pc = PC + target_offset
@@ -140,7 +145,7 @@ else:
   PC = target_pc
 
 Example:
-@p0 BRA 25, 20    
+BRAP p0, LOOP, DONE
 ```
 
 ### RCNV
@@ -208,7 +213,7 @@ EXIT    ; terminate all currently active lanes
 | `0x3`  |   `STG`     |
 | `0x4`  |   `BRA`     |
 | `0x5`  |   `PRED`    |
-| `0x6`  |   `@p BRA`  |
+| `0x6`  |   `BRAP`    |
 | `0x7`  |   `RCNV`    |
 | `0x8`  |   `MOV`     |
 | `0x9`  |   `EXIT`    |
@@ -250,7 +255,7 @@ EXIT    ; terminate all currently active lanes
 +------------+----------+------------+------------+--------+------+
 ```
 
-### PB-Type (@p BRA):
+### PB-Type (BRAP):
 ```text 
 31         28 27      25 24                  13 12              1   0
 +------------+----------+----------------------+----------------+---+
