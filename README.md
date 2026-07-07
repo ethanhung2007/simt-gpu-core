@@ -7,7 +7,7 @@ I am trying to build a custom GPU inspired SIMT core running a minimal custom IS
 
 ## Architecture
 
-The SIMT core will be staged pipelined with N (to be determined) warps, a warp scheduler, and other units (will finish when microarchitecture is more concrete). 
+The SIMT core will be pipelined with N (to be determined) warps, a warp scheduler, and other units (will finish when microarchitecture is more concrete). 
 
 ## Implementation Specifics
 
