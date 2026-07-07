@@ -1,8 +1,8 @@
 package simt_defs;
 
-  parameter int DATA_W = 32;
+//  parameter int DATA_W = 32;
   parameter int REG_COUNT = 32;
-  parameter int P_REG_COUNT = 8;
+//  parameter int P_REG_COUNT = 8;
 
   typedef enum logic [3:0] {
     OP_ADD  = 4'h0,

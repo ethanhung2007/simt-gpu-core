@@ -4,10 +4,13 @@ module lane (
     input logic alu_op, // 1 for mul, 0 for add
     input logic [4:0] rd_i, rs1_i, rs2_i, // rb will use rs1 when needed; i for index
     input logic [31:0] imm,
-    input logic [2:0] cond,
+//  input logic [2:0] cond,
     input logic op2_sel, // if 1 reg, 0 then imm
     input logic we,
-    input logic [1:0] wb_sel // if 0 reg, 1 then imm, 2 then mem
+    input logic [1:0] wb_sel, // if 0 reg, 1 then imm, 2 then mem
+    output logic [31:0] debug_rs1_val,
+    output logic [31:0] debug_rs2_val,
+    output logic [31:0] debug_w_data
 );
 
   import simt_defs::*;
@@ -43,8 +46,14 @@ module lane (
       ALU_RESULT: w_data = alu_res;
       IMM_RESULT: w_data = imm;
       // MEM_DATA: 
+      default: w_data = 0;
     endcase
   end
 
+  always_comb begin
+    debug_rs1_val = rs1_reg;
+    debug_rs2_val = rs2_reg;
+    debug_w_data  = w_data;
+  end
 
 endmodule
