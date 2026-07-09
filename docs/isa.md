@@ -123,7 +123,7 @@ BRAP p, target, reconv
 
 Semantics:
 target_pc = PC + target_offset
-fallthrough_pc = PC + 1
+fallthrough_pc = PC + 4
 reconv_pc = PC + reconv_offset
 
 taken_mask = am & p
