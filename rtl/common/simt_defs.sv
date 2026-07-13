@@ -1,8 +1,8 @@
 package simt_defs;
 
-//  parameter int DATA_W = 32;
+  //  parameter int DATA_W = 32;
   parameter int REG_COUNT = 32;
-//  parameter int P_REG_COUNT = 8;
+  parameter int PREG_COUNT = 8;
 
   typedef enum logic [3:0] {
     OP_ADD  = 4'h0,
@@ -11,7 +11,7 @@ package simt_defs;
     OP_STG  = 4'h3,
     OP_BRA  = 4'h4,
     OP_PRED = 4'h5,
-    OP_PBRA = 4'h6,
+    OP_BRAP = 4'h6,
     OP_RCNV = 4'h7,
     OP_MOV  = 4'h8,
     OP_EXIT = 4'h9
@@ -22,5 +22,13 @@ package simt_defs;
     IMM_RESULT,
     MEM_DATA
   } wb_sel_t;
+
+  typedef struct packed {
+    logic deferred_valid;
+    logic [31:0] deferred_pc;
+    logic [7:0] deferred_mask;
+    logic [31:0] reconv_pc;
+    logic [7:0] reconv_mask;
+  } simt_stack_entry_t;
 
 endpackage
