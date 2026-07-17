@@ -103,7 +103,7 @@ module decoder (
       end
       OP_MOV: begin
         rd_i = instr[27:23];
-        imm = instr[22:0];
+        imm = {{(DATA_W-23){1'b0}}, instr[22:0]};
         reg_we = 1;
         wb_sel = IMM_RESULT;
       end

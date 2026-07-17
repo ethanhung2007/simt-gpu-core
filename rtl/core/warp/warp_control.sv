@@ -1,6 +1,8 @@
 import simt_defs::*;
 
-module warp_control (
+module warp_control #(
+    parameter int NUM_WARP_LANES = NUM_LANES
+) (
     input logic clk,
     input logic rst,
     input logic branch_valid,
@@ -9,11 +11,11 @@ module warp_control (
     input logic [DATA_W-1:0] branch_reconv_off,
     input logic rcnv_valid,
     input logic exit_valid,
-    input logic [NUM_LANES-1:0] pred_vec,
+    input logic [NUM_WARP_LANES-1:0] pred_vec,
     output logic done,
     output logic stalled,
     output logic [DATA_W-1:0] pc,
-    output logic [NUM_LANES-1:0] active_mask,
+    output logic [NUM_WARP_LANES-1:0] active_mask,
     output logic error
 );
 
@@ -22,7 +24,7 @@ module warp_control (
   logic [1:0] stack_ret_code;  // 0 for success, 1 for push when full, 2 for pop when empty
   logic [1:0] stack_op;  // 2 for clear_deferred , 1 for push, 0 for pop
   logic [DATA_W-1:0] brap_target_pc, brap_fallthrough_pc, brap_reconv_pc;
-  logic [NUM_LANES-1:0] taken_mask, fallthrough_mask;
+  logic [NUM_WARP_LANES-1:0] taken_mask, fallthrough_mask;
 
   logic stack_empty;
   logic stack_full;
@@ -73,7 +75,7 @@ module warp_control (
   always_ff @(posedge clk) begin
     if (rst) begin
       pc <= '0;  // starting pc set as 0 for now
-      active_mask <= {NUM_LANES{1'b1}};
+      active_mask <= {NUM_WARP_LANES{1'b1}};
       done <= '0;
       state <= NORMAL;
       brap_target_pc <= '0;
@@ -86,13 +88,13 @@ module warp_control (
       if (state == NORMAL) begin
         if (branch_valid) begin
           if (branch_predicated) begin
-            brap_target_pc <= pc + branch_target_off;
+            brap_target_pc <= pc + (branch_target_off << 2); // offsets are encoded in 32 bit instruction units
             brap_fallthrough_pc <= pc + 4;
-            brap_reconv_pc <= pc + branch_reconv_off;
+            brap_reconv_pc <= pc + (branch_reconv_off << 2);
             taken_mask <= active_mask & pred_vec;
             fallthrough_mask <= active_mask & (~pred_vec);
           end else begin
-            pc <= pc + branch_target_off;
+            pc <= pc + (branch_target_off << 2);
           end
         end else if (exit_valid) begin
           done <= 1;

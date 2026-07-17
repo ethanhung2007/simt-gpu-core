@@ -1,4 +1,4 @@
-module comparator (
+module lane_comparator (
     input logic [31:0] rs1_val,
     input logic [31:0] rs2_val,
     input logic [2:0] cond,

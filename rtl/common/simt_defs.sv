@@ -1,6 +1,7 @@
 package simt_defs;
 
-  //  parameter int DATA_W = 32;
+  parameter int DATA_W = 32;
+  parameter int NUM_LANES = 4;
   parameter int REG_COUNT = 32;
   parameter int PREG_COUNT = 8;
 
@@ -25,10 +26,10 @@ package simt_defs;
 
   typedef struct packed {
     logic deferred_valid;
-    logic [31:0] deferred_pc;
-    logic [7:0] deferred_mask;
-    logic [31:0] reconv_pc;
-    logic [7:0] reconv_mask;
+    logic [DATA_W-1:0] deferred_pc;
+    logic [NUM_LANES-1:0] deferred_mask;
+    logic [DATA_W-1:0] reconv_pc;
+    logic [NUM_LANES-1:0] reconv_mask;
   } simt_stack_entry_t;
 
 endpackage

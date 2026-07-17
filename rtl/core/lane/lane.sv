@@ -21,9 +21,9 @@ module lane (
     output logic mem_we_o,
     output logic [DATA_W-1:0] w_mem_data,
     output logic [DATA_W-1:0] mem_addr
-    // output logic [DATA_W-1:0] debug_rs1_val,  
-    // output logic [DATA_W-1:0] debug_rs2_val,  
-    // output logic [DATA_W-1:0] debug_w_data  
+//  output logic [DATA_W-1:0] debug_rs1_val,  
+//  output logic [DATA_W-1:0] debug_rs2_val,  
+//  output logic [DATA_W-1:0] debug_w_data  
 );
 
   logic [DATA_W-1:0] rs1_val, rs2_val, rs1_reg, rs2_reg;
@@ -87,10 +87,10 @@ module lane (
   end
 
   //test code  
-  //always_comb begin  
-  // debug_rs1_val = rs1_reg;  
-  // debug_rs2_val = rs2_reg;  
-  // debug_w_data = w_data;  
-  //end  
+//always_comb begin  
+// debug_rs1_val = rs1_reg;  
+// debug_rs2_val = rs2_reg;  
+// debug_w_data = w_data;  
+//end  
 
 endmodule
