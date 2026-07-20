@@ -4,7 +4,7 @@ module warp_control #(
     parameter int NUM_WARP_LANES = NUM_LANES
 ) (
     input logic clk,
-    input logic rst,
+    input logic rst, 
     input logic branch_valid,
     input logic branch_predicated,
     input logic [DATA_W-1:0] branch_target_off,
@@ -64,7 +64,7 @@ module warp_control #(
         else next_state = NORMAL;
       end
       BRAP_RESOLVE:
-      next_state = taken_mask != '0 && fallthrough_mask != '0 && stack_full ? ERROR : NORMAL;
+      next_state = stack_full ? ERROR : NORMAL;
       RCNV_RESOLVE: next_state = stack_empty ? ERROR : NORMAL;
       DONE: next_state = DONE;
       ERROR: next_state = ERROR;
@@ -105,13 +105,13 @@ module warp_control #(
           pc <= pc + 4;
         end
       end else if (state == BRAP_RESOLVE) begin
-        if (taken_mask == 0) pc <= brap_fallthrough_pc;
-        else if (fallthrough_mask == 0) pc <= brap_target_pc;
-        else
-        if (stack_full) begin
-        end else begin
-          active_mask <= taken_mask;
-          pc <= brap_target_pc;
+        if (!stack_full) begin
+          if (taken_mask == 0) pc <= brap_fallthrough_pc;
+          else if (fallthrough_mask == 0) pc <= brap_target_pc;
+          else begin
+            active_mask <= taken_mask;
+            pc <= brap_target_pc;
+          end
         end
       end else if (state == RCNV_RESOLVE) begin
         if (!stack_empty) begin
@@ -146,6 +146,14 @@ module warp_control #(
         push_entry.deferred_valid = 1;
         push_entry.deferred_pc = brap_fallthrough_pc;
         push_entry.deferred_mask = fallthrough_mask;
+        push_entry.reconv_pc = brap_reconv_pc;
+        push_entry.reconv_mask = active_mask;
+        stack_en = 1;
+      end
+    end else if (state == BRAP_RESOLVE && (taken_mask != '0 || fallthrough_mask != '0)) begin
+      if (!stack_full) begin
+        stack_op = 1;
+        push_entry.deferred_valid = 0;
         push_entry.reconv_pc = brap_reconv_pc;
         push_entry.reconv_mask = active_mask;
         stack_en = 1;

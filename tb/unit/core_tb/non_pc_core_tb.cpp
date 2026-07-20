@@ -48,8 +48,7 @@ int main() {
   tick(dut.get(), contextp.get(), tfp.get());
 
   for (int i = 0; i < 4; i++) {
-    if (dut->w_mem_data[i] == 84) {
-      std::cout << "MOV, ADD, MUL, STG values correct for lane" << i
+    if (dut->w_mem_data[i] == 84) { std::cout << "MOV, ADD, MUL, STG values correct for lane" << i
                 << std::endl;
     } else {
       std::cout << "MOV, ADD, MUL, STG values incorrect; R4[" << i << "] != 84"

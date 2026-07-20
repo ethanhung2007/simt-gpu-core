@@ -7,7 +7,8 @@ module lane_reg_file (
     input logic [4:0] rs1,
     input logic [4:0] rs2,
     output logic [31:0] rs1_val,
-    output logic [31:0] rs2_val
+    output logic [31:0] rs2_val,
+    output logic [31:0] tb_r3_out
 );
 
   import simt_defs::*;
@@ -22,5 +23,7 @@ module lane_reg_file (
       for (int i = 0; i < REG_COUNT; i++) registers[i] <= '0;
     end else if (we) registers[rd] <= data;
   end
+
+  assign tb_r3_out = registers[3];
 
 endmodule
