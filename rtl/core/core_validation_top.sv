@@ -22,8 +22,8 @@ module core_validation_top #(
     output logic [NUM_TEST_LANES-1:0] mem_valid_o,
     output logic [NUM_TEST_LANES-1:0] mem_we_o,
     output logic [DATA_W-1:0] w_mem_data[NUM_TEST_LANES-1:0],
-    output logic [DATA_W-1:0] mem_addr[NUM_TEST_LANES-1:0],
-    output logic [NUM_TEST_LANES-1:0] tb_r3_out[DATA_W-1:0]
+    output logic [DATA_W-1:0] mem_addr[NUM_TEST_LANES-1:0]
+//  output logic [NUM_TEST_LANES-1:0] tb_r3_out[DATA_W-1:0]
 );
 
   logic mem_we_i;
@@ -110,8 +110,8 @@ module core_validation_top #(
           .mem_valid(mem_valid_o[i]),
           .mem_we_o(mem_we_o[i]),
           .w_mem_data(w_mem_data[i]),
-          .mem_addr(mem_addr[i]),
-          .tb_r3_out(tb_r3_out[i])
+          .mem_addr(mem_addr[i])
+//        .tb_r3_out(tb_r3_out[i])
       );
     end
   endgenerate

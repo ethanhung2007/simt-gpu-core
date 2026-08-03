@@ -20,8 +20,8 @@ module lane (
     output logic mem_valid,  // indicates that this instr is mem related
     output logic mem_we_o,
     output logic [DATA_W-1:0] w_mem_data,
-    output logic [DATA_W-1:0] mem_addr,
-    output logic [DATA_W-1:0] tb_r3_out 
+    output logic [DATA_W-1:0] mem_addr
+//  output logic [DATA_W-1:0] tb_r3_out 
 //  output logic [DATA_W-1:0] debug_rs1_val,  
 //  output logic [DATA_W-1:0] debug_rs2_val,  
 //  output logic [DATA_W-1:0] debug_w_data  
@@ -49,8 +49,8 @@ module lane (
       .rs1(rs1_i),
       .rs2(rs2_i),
       .rs1_val(rs1_reg),
-      .rs2_val(rs2_reg),
-      .tb_r3_out(tb_r3_out)
+      .rs2_val(rs2_reg)
+//    .tb_r3_out(tb_r3_out)
   );
 
   lane_comparator comparator (
@@ -89,10 +89,10 @@ module lane (
   end
 
   //test code  
-//always_comb begin  
-// debug_rs1_val = rs1_reg;  
-// debug_rs2_val = rs2_reg;  
-// debug_w_data = w_data;  
-//end  
+  //always_comb begin  
+  // debug_rs1_val = rs1_reg;  
+  // debug_rs2_val = rs2_reg;  
+  // debug_w_data = w_data;  
+  //end  
 
 endmodule

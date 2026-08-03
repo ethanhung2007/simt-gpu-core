@@ -63,8 +63,7 @@ module warp_control #(
         else if (rcnv_valid) next_state = RCNV_RESOLVE;
         else next_state = NORMAL;
       end
-      BRAP_RESOLVE:
-      next_state = stack_full ? ERROR : NORMAL;
+      BRAP_RESOLVE: next_state = stack_full ? ERROR : NORMAL;
       RCNV_RESOLVE: next_state = stack_empty ? ERROR : NORMAL;
       DONE: next_state = DONE;
       ERROR: next_state = ERROR;

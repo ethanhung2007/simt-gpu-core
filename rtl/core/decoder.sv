@@ -4,7 +4,7 @@ module decoder (
     input logic clk,
     input logic rst,
     input logic [DATA_W-1:0] instr,
-    output logic mem_we_i,
+    output logic mem_we_i, // 1 for store, 0 for load
     output logic mem_op,
     output logic alu_op,
     output logic [4:0] rd_i, rs1_i, rs2_i,
