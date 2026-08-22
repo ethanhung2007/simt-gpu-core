@@ -1,9 +1,9 @@
 import simt_defs::*;
 
-module lane (
+module lane ( // commented out the mem stuff because determining them at a lane level disrupts higher level logic
     input logic clk,
     input logic rst,
-    input logic mem_we_i,  // 1 for store, 0 for load
+//  input logic mem_we_i,  // 1 for store, 0 for load
     input logic mem_op,  // 1 if mem op, 0 if not
     input logic alu_op,  // 1 for mul, 0 for add  
     input logic [4:0] rd_i, rs1_i, rs2_i,  // for load/store rb = rs1; i for index
@@ -14,11 +14,12 @@ module lane (
     input logic lane_active,
     input logic op2_sel,  // if 1 reg, 0 then imm  
     input logic reg_we,
+    input logic load_reg_we, // specific for load operations
     input logic [1:0] wb_sel,  // if 0 reg, 1 then imm, 2 then mem  
     input logic [DATA_W-1:0] r_mem_data,
     output logic pred_val_o,
-    output logic mem_valid,  // indicates that this instr is mem related
-    output logic mem_we_o,
+//  output logic mem_valid,  // indicates that this instr is mem related
+//  output logic mem_we_o,
     output logic [DATA_W-1:0] w_mem_data,
     output logic [DATA_W-1:0] mem_addr
 //  output logic [DATA_W-1:0] tb_r3_out 
@@ -71,21 +72,27 @@ module lane (
   );
 
   always_comb begin
+    lane_reg_we = 0;
     rs1_val = rs1_reg;
     rs2_val = op2_sel ? rs2_reg : imm;
     w_data = '0;
     w_mem_data = rs2_reg;
     mem_addr = alu_res;
-    lane_reg_we = lane_active && reg_we;
     lane_preg_we = lane_active && preg_we;
-    case (wb_sel)
-      ALU_RESULT: w_data = alu_res;
-      IMM_RESULT: w_data = imm;
-      MEM_DATA: w_data = r_mem_data;
-      default: w_data = 0;
-    endcase
-    mem_we_o  = (mem_op) && mem_we_i && lane_active;
-    mem_valid = (mem_op) && lane_active;
+    if (load_reg_we) begin
+      lane_reg_we = 1;
+      w_data = r_mem_data;
+    end else if (!mem_op) begin
+      lane_reg_we = lane_active && reg_we;
+
+      case (wb_sel)
+        ALU_RESULT: w_data = alu_res;
+        IMM_RESULT: w_data = imm;
+        default: w_data = 0;
+      endcase
+    end
+//  mem_we_o  = (mem_op) && mem_we_i && lane_active;
+//  mem_valid = (mem_op) && lane_active;
   end
 
   //test code  

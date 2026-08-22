@@ -4,7 +4,8 @@ module warp_control #(
     parameter int NUM_WARP_LANES = NUM_LANES
 ) (
     input logic clk,
-    input logic rst, 
+    input logic rst,
+    input logic external_stall,
     input logic branch_valid,
     input logic branch_predicated,
     input logic [DATA_W-1:0] branch_target_off,
@@ -82,7 +83,7 @@ module warp_control #(
       brap_reconv_pc <= '0;
       taken_mask <= '0;
       fallthrough_mask <= '0;
-    end else begin
+    end else if (!external_stall) begin
       state <= next_state;
       if (state == NORMAL) begin
         if (branch_valid) begin
@@ -134,42 +135,43 @@ module warp_control #(
 
   // combinational logic block
   always_comb begin
-    stalled = state != NORMAL;
+    stalled = state != NORMAL || external_stall;
     stack_en = 0;
     stack_op = 1;
     push_entry = '0;
-    error = 0;
-    if (state == BRAP_RESOLVE && taken_mask != '0 && fallthrough_mask != '0) begin
-      if (!stack_full) begin
-        stack_op = 1;
-        push_entry.deferred_valid = 1;
-        push_entry.deferred_pc = brap_fallthrough_pc;
-        push_entry.deferred_mask = fallthrough_mask;
-        push_entry.reconv_pc = brap_reconv_pc;
-        push_entry.reconv_mask = active_mask;
-        stack_en = 1;
+    error = (state == ERROR);
+
+    if (!external_stall) begin
+      if (state == BRAP_RESOLVE && taken_mask != '0 && fallthrough_mask != '0) begin
+        if (!stack_full) begin
+          stack_op = 1;
+          push_entry.deferred_valid = 1;
+          push_entry.deferred_pc = brap_fallthrough_pc;
+          push_entry.deferred_mask = fallthrough_mask;
+          push_entry.reconv_pc = brap_reconv_pc;
+          push_entry.reconv_mask = active_mask;
+          stack_en = 1;
+        end
+      end else if (state == BRAP_RESOLVE && (taken_mask != '0 || fallthrough_mask != '0)) begin
+        if (!stack_full) begin
+          stack_op = 1;
+          push_entry.deferred_valid = 0;
+          push_entry.reconv_pc = brap_reconv_pc;
+          push_entry.reconv_mask = active_mask;
+          stack_en = 1;
+        end
+      end else if (state == RCNV_RESOLVE) begin
+        if (!stack_empty) begin
+          stack_en = 1;
+          if (top_entry.deferred_valid == 1) stack_op = 2;
+          else stack_op = 0;
+        end
       end
-    end else if (state == BRAP_RESOLVE && (taken_mask != '0 || fallthrough_mask != '0)) begin
-      if (!stack_full) begin
-        stack_op = 1;
-        push_entry.deferred_valid = 0;
-        push_entry.reconv_pc = brap_reconv_pc;
-        push_entry.reconv_mask = active_mask;
-        stack_en = 1;
-      end
-    end else if (state == RCNV_RESOLVE) begin
-      if (!stack_empty) begin
-        stack_en = 1;
-        if (top_entry.deferred_valid == 1) stack_op = 2;
-        else stack_op = 0;
-      end
-    end else if (state == ERROR) begin
-      error = 1;
     end
   end
 
   always_ff @(posedge clk) begin
-    if (!rst && state == NORMAL) begin
+    if (!rst && !external_stall && state == NORMAL) begin
       assert ($onehot0({branch_valid, rcnv_valid, exit_valid}))
       else $error("Multiple control instructions valid at once");
     end
