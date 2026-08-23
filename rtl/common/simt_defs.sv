@@ -15,14 +15,24 @@ package simt_defs;
     OP_BRAP = 4'h6,
     OP_RCNV = 4'h7,
     OP_MOV  = 4'h8,
-    OP_EXIT = 4'h9
+    OP_EXIT = 4'h9,
+    OP_MFSR = 4'h10
   } opcode_t;
 
   typedef enum logic [1:0] {
     ALU_RESULT,
     IMM_RESULT,
-    MEM_DATA
+    MEM_DATA,
+    WB_MFSR
   } wb_sel_t;
+
+  typedef enum logic [3:0] {
+    LANEID,
+    WARPID,
+    TID,
+    LANEMASK_LT,
+    ACTIVEMASK
+  } mfsr_opt_t;
 
   typedef struct packed {
     logic deferred_valid;

@@ -98,9 +98,9 @@ Compares two values with a relational operator and writes a predicate register. 
 Format:
 PRED p, rs1, rs2, cond
 
-LT = 001
-EQ = 010
-GT = 100
+001: LT 
+010: EQ
+100: GT
 
 Semantics:
 for each active lane i:
@@ -203,6 +203,36 @@ EXIT    ; terminate all currently active lanes
 
 ```
 
+### MFSR
+
+```text
+Moves a value asssigned to a hardware-special register into a given register. Hardware-special registers include lane, warp, total (considers lane and warp), lower lane lane mask, active mask.
+
+Format:
+MFSR rd, sel
+
+Semantics:
+for each active lane i:
+  rd[i] = given selector encoding
+
+inactive lanes do not modify rd[i]
+
+Selector Encoding:
+0x0: LANEID
+     rd[i] = lane_id
+0x1: WARPID
+     rd[i] = warp_id
+0x2: TID
+     rd[i] = warp_id * WARP_SIZE + lane_id
+0x3: LANEMASK_LT
+     rd[i] = (1 << i) - 1
+0x4: ACTIVEMASK
+     rd[i] = active_mask
+
+Example:
+MFSR R1, LANEID
+
+```
 ## Opcode Table
 
 | Opcode | Instruction |
@@ -217,6 +247,7 @@ EXIT    ; terminate all currently active lanes
 | `0x7`  |   `RCNV`    |
 | `0x8`  |   `MOV`     |
 | `0x9`  |   `EXIT`    |
+| `0xA`  |   `MFSR`    |
 
 ## Instruction Encoding
 
@@ -279,6 +310,15 @@ EXIT    ; terminate all currently active lanes
 +------------+--------------------------------------------------+
 |   opcode   |                     unused                       |
 +------------+--------------------------------------------------+
+```
+
+### S-Type (MFSR):
+
+```text 
+31         28 27       23 22       19 18                        0
++------------+-----------+-----------+--------------------------+
+|   opcode   |    rd     |    sel    |          unused          |
++------------+-----------+-----------+--------------------------+
 ```
 
 ## Additional Notes

@@ -11,6 +11,7 @@ module decoder (
     output logic [2:0] p_i,
     output logic [DATA_W-1:0] imm,
     output logic [2:0] cond,
+    output logic [3:0] mfsr_sel,
     output logic op2_sel,
     output logic reg_we,
     output logic preg_we,
@@ -47,6 +48,7 @@ module decoder (
     branch_reconv_off = 0;
     rcnv_valid = 0;
     exit_valid = 0;
+    mfsr_sel = 0;
 
     case (opcode)
       OP_ADD: begin
@@ -109,6 +111,12 @@ module decoder (
       end
       OP_EXIT: begin
         exit_valid = 1;
+      end
+      OP_MFSR: begin
+        rd_i = instr[27:23];
+        mfsr_sel = instr[22:19];
+        reg_we = 1;
+        wb_sel = WB_MFSR;
       end
     endcase
   end
