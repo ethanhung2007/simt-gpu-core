@@ -10,6 +10,7 @@ always_comb begin
     3'b100: res = (rs1_val > rs2_val) ? 1 : 0;
     3'b010: res = (rs1_val == rs2_val) ? 1 : 0;
     3'b001: res = (rs1_val < rs2_val) ? 1 : 0;
+    default: res = 0;
   endcase
 end
 

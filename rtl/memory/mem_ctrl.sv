@@ -19,8 +19,8 @@ module mem_ctrl #(
     output logic done,
     output logic [DATA_W-1:0] load_data,  // load into lanes
     output logic load_writeback_valid,
-    output logic [$clog2(NUM_WARP_LANES)-1:0] load_writeback_lane
-    output logic mem_accept; // logic for saved_rd, allowing for future implementation for pipelining
+    output logic [$clog2(NUM_WARP_LANES)-1:0] load_writeback_lane,
+    output logic mem_accept // logic for saved_rd, allowing for future implementation for pipelining
 );
 
   typedef enum logic [3:0] {
@@ -63,7 +63,7 @@ NUM_WARP_LANES
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      state <= 0;
+      state <= IDLE;
       active_mask_r <= 0;
       current_lane_r <= 0;
       pending_lane_r <= 0;

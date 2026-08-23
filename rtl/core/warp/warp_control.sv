@@ -6,6 +6,7 @@ module warp_control #(
     input logic clk,
     input logic rst,
     input logic external_stall,
+    input logic [DATA_W-1:0] exec_pc,
     input logic branch_valid,
     input logic branch_predicated,
     input logic [DATA_W-1:0] branch_target_off,
@@ -88,13 +89,13 @@ module warp_control #(
       if (state == NORMAL) begin
         if (branch_valid) begin
           if (branch_predicated) begin
-            brap_target_pc <= pc + (branch_target_off << 2); // offsets are encoded in 32 bit instruction units
-            brap_fallthrough_pc <= pc + 4;
-            brap_reconv_pc <= pc + (branch_reconv_off << 2);
+            brap_target_pc <= exec_pc + (branch_target_off << 2); // offsets are encoded in 32 bit instruction units
+            brap_fallthrough_pc <= exec_pc + 4;
+            brap_reconv_pc <= exec_pc + (branch_reconv_off << 2);
             taken_mask <= active_mask & pred_vec;
             fallthrough_mask <= active_mask & (~pred_vec);
           end else begin
-            pc <= pc + (branch_target_off << 2);
+            pc <= exec_pc + (branch_target_off << 2);
           end
         end else if (exit_valid) begin
           done <= 1;

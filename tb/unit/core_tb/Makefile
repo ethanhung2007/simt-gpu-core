@@ -14,6 +14,9 @@ RTL := \
 	$(ROOT)/rtl/core/decoder.sv \
 	$(ROOT)/rtl/core/warp/warp_simt_stack.sv \
 	$(ROOT)/rtl/core/warp/warp_control.sv \
+	$(ROOT)/rtl/memory/instruction_memory.sv \
+	$(ROOT)/rtl/memory/data_memory.sv \
+	$(ROOT)/rtl/memory/mem_ctrl.sv \
 	$(ROOT)/rtl/core/core_validation_top.sv
 
 OBJ_DIR := obj_dir

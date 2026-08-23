@@ -5,10 +5,17 @@ import sys
 # tokenizes the file into a 2d array, where each row in the array represents one line of assembly
 def tokenize(filename):
   tokens = []
+
   with open(filename, "r") as f:
     for line in f:
-      token = line.strip().replace(",", "").replace("\n", "").split(" ")
+      line = line.strip()
+
+      if not line:
+        continue
+
+      token = line.replace(",", "").split()
       tokens.append(token)
+
   return tokens
 
 # creates the symbol table, meaning it needs to figure out which line corresponds with the symbol
@@ -29,11 +36,13 @@ def pass1(filename):
         if line[1] not in isa.INSTRUCTIONS: # illegal instruction
           print(f"Error: Illegal Instruction on line {lineNums}") 
           return {}, [], False
-        lineNums += 1
+        symbolTable.update({line[0] : lineNums})
         instrLines.append(line[1:])
+        lineNums += 1
       else:
         prevSym = True
-      symbolTable.update({line[0] : lineNums})
+        symbolTable.update({line[0] : lineNums})
+        lineNums += 1
     elif prevSym == False:
       lineNums += 1
       prevSym = False
