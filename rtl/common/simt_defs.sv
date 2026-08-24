@@ -2,6 +2,7 @@ package simt_defs;
 
   parameter int DATA_W = 32;
   parameter int NUM_LANES = 4;
+  parameter int NUM_WARPS = 4;
   parameter int REG_COUNT = 32;
   parameter int PREG_COUNT = 8;
 
@@ -16,7 +17,7 @@ package simt_defs;
     OP_RCNV = 4'h7,
     OP_MOV  = 4'h8,
     OP_EXIT = 4'h9,
-    OP_MFSR = 4'h10
+    OP_MFSR = 4'hA
   } opcode_t;
 
   typedef enum logic [1:0] {

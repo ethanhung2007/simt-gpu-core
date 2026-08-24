@@ -12,4 +12,5 @@ skip brap p0, taken, reconv
 mov r7, 0
 reconv rcnv
 taken mov r7, 1
+mfsr r5, laneid
 exit

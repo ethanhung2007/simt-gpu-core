@@ -1,15 +1,13 @@
 import simt_defs::*;
 
-module mem_ctrl #(
-    parameter int NUM_WARP_LANES = NUM_LANES
-) (
+module mem_ctrl (
     input logic clk,
     input logic rst,
     input logic mem_we_i,
     input logic mem_op_i,
-    input logic [NUM_WARP_LANES-1:0] active_mask,
-    input logic [DATA_W-1:0] mem_addr_i[NUM_WARP_LANES-1:0], 
-    input logic [DATA_W-1:0] w_mem_data_i[NUM_WARP_LANES-1:0], // input from lanes to write into data mem
+    input logic [NUM_LANES-1:0] active_mask,
+    input logic [DATA_W-1:0] mem_addr_i[NUM_LANES-1:0],
+    input logic [DATA_W-1:0] w_mem_data_i[NUM_LANES-1:0], // input from lanes to write into data mem
     input logic [DATA_W-1:0] r_mem_data,  // input from data mem to load into lanes
     output logic mem_op_o,
     output logic mem_we_o,
@@ -19,7 +17,7 @@ module mem_ctrl #(
     output logic done,
     output logic [DATA_W-1:0] load_data,  // load into lanes
     output logic load_writeback_valid,
-    output logic [$clog2(NUM_WARP_LANES)-1:0] load_writeback_lane,
+    output logic [$clog2(NUM_LANES)-1:0] load_writeback_lane,
     output logic mem_accept // logic for saved_rd, allowing for future implementation for pipelining
 );
 
@@ -36,11 +34,11 @@ module mem_ctrl #(
 
 
   // controller needs to save certain internal info, s for save, r for registered
-  logic [NUM_WARP_LANES-1:0] active_mask_s, active_mask_r;
+  logic [NUM_LANES-1:0] active_mask_s, active_mask_r;
   logic [$clog2(
-NUM_WARP_LANES
+NUM_LANES
 )-1:0] current_lane_s;  // current: address sent to memory now; pending: previous send
-  logic [$clog2(NUM_WARP_LANES)-1:0] current_lane_r, pending_lane_r;
+  logic [$clog2(NUM_LANES)-1:0] current_lane_r, pending_lane_r;
 
   logic valid_lane;  // determines whether there is a valid next lane
 
@@ -101,7 +99,7 @@ NUM_WARP_LANES
     else active_mask_s = active_mask_r;
     valid_lane = 0;
     for (
-        i = 0; i < NUM_WARP_LANES; i++
+        i = 0; i < NUM_LANES; i++
     ) begin  // priority encoder (MSB highest) to determine next lane
       if (active_mask_s[i]) begin
         valid_lane = 1;

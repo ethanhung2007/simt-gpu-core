@@ -17,6 +17,7 @@ RTL := \
 	$(ROOT)/rtl/memory/instruction_memory.sv \
 	$(ROOT)/rtl/memory/data_memory.sv \
 	$(ROOT)/rtl/memory/mem_ctrl.sv \
+	$(ROOT)/rtl/core/mfsr_read_unit.sv \
 	$(ROOT)/rtl/core/core_validation_top.sv
 
 OBJ_DIR := obj_dir

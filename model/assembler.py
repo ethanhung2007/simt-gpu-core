@@ -62,15 +62,17 @@ def pass2(symbolTable, instrLines):
     opcode = isa.opcodes.get(line[0])
     match opcode:
       case 0 | 1:
-        rd = int(line[1][1])
-        rs1 = int(line[2][1])
-        rs2 = int(line[3][1])
+        rd = int(line[1][1:])
+        rs1 = int(line[2][1:])
+        rs2 = int(line[3][1:])
         hexLine = f"{int(f"{opcode:04b}{rd:05b}{rs1:05b}{rs2:05b}{0:013b}", 2):08x}"
         machineCode.append(hexLine)
       case 2 | 3:
-        rd_rs = int(line[1][1])
-        imm = int(line[2][0])
-        rb = int(line[2][3])
+        rd_rs = int(line[1][1:])
+        imm_str, rb_str = line[2].lower().split("(")
+
+        imm = int(imm_str)
+        rb = int(rb_str[1:-1])
         hexLine = f"{int(f"{opcode:04b}{rd_rs:05b}{rb:05b}{imm:018b}", 2):08x}"
         machineCode.append(hexLine)
       case 4:
@@ -80,9 +82,9 @@ def pass2(symbolTable, instrLines):
         hexLine = f"{int(f"{opcode:04b}{offset & mask:028b}", 2):08x}"
         machineCode.append(hexLine)
       case 5:
-        p = int(line[1][1])
-        rs1 = int(line[2][1])
-        rs2 = int(line[3][1])
+        p = int(line[1][1:])
+        rs1 = int(line[2][1:])
+        rs2 = int(line[3][1:])
         cond = isa.CONDITION_CODES.get(line[4].lower())
         hexLine = f"{int(f"{opcode:04b}{p:03b}{rs1:05b}{rs2:05b}{cond:03b}{0:012b}", 2):08x}"
         machineCode.append(hexLine)
@@ -96,14 +98,18 @@ def pass2(symbolTable, instrLines):
         hexLine = f"{int(f"{opcode:04b}{p:03b}{targ_offset & mask:012b}{rcnv_offset & mask:012b}{0:01b}", 2):08x}"
         machineCode.append(hexLine)
       case 8:
-        rd = int(line[1][1])
+        rd = int(line[1][1:])
         imm = int(line[2])
         hexLine = f"{int(f"{opcode:04b}{rd:05b}{imm:023b}", 2):08x}"
         machineCode.append(hexLine)
       case 7 | 9:
         hexLine = f"{int(f"{opcode:04b}{0:028b}", 2):08x}"
         machineCode.append(hexLine)
-
+      case 10:
+        rd = int(line[1][1:])
+        mfsr_sel = isa.MFSR_SEL[line[2].lower()]
+        hexLine = f"{int(f"{opcode:04b}{rd:05b}{mfsr_sel:04b}{0:019b}", 2):08x}"
+        machineCode.append(hexLine)
     lineNums += 1
 
   return machineCode
@@ -115,6 +121,7 @@ def main():
 
   if len(sys.argv) < 2:
     print("Error: Did not provide filename")
+    return
 
   filename = sys.argv[1]
   symbolTable, instrLines, valid = pass1(filename)

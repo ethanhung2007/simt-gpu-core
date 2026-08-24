@@ -71,6 +71,12 @@ module core_validation_top #(
   logic dec_rcnv_valid;
   logic dec_exit_valid;
 
+  // mfsr registers
+  logic [DATA_W-1:0] mfsr_data[NUM_TEST_LANES-1:0];
+  logic [3:0] mfsr_sel;
+//logic [$clog2(NUM_WARPS)-1:0] warp_id,
+
+
   always_ff @(posedge clk) begin
     if (rst) begin
       exec_pc <= '0;
@@ -86,9 +92,7 @@ module core_validation_top #(
   assign exec_pc_tb = exec_pc;
   assign instr_tb = instr;
 
-  warp_control #(
-      .NUM_WARP_LANES(NUM_TEST_LANES)
-  ) warp_control_inst (
+  warp_control warp_control_inst (
       .clk(clk),
       .rst(rst),
       .exec_pc(exec_pc),
@@ -115,9 +119,7 @@ module core_validation_top #(
   assign rcnv_valid_o = dec_rcnv_valid && exec_valid;
   assign exit_valid_o = dec_exit_valid && exec_valid;
 
-  mem_ctrl #(
-      .NUM_WARP_LANES(NUM_TEST_LANES)
-  ) mem_ctrl_inst (
+  mem_ctrl mem_ctrl_inst (
       .clk(clk),
       .rst(rst),
       .mem_we_i(mem_we_i),
@@ -158,7 +160,6 @@ module core_validation_top #(
     end
   end
 
-
   assign rd_lane = load_writeback_valid ? saved_load_rd : rd_i;
 
   data_memory data_mem_inst (
@@ -190,6 +191,7 @@ module core_validation_top #(
       .p_i(p_i),
       .imm(imm),
       .cond(cond),
+      .mfsr_sel(mfsr_sel),
       .op2_sel(op2_sel),
       .reg_we(dec_reg_we),
       .preg_we(dec_preg_we),
@@ -200,6 +202,13 @@ module core_validation_top #(
       .branch_reconv_off(branch_reconv_off),
       .rcnv_valid(dec_rcnv_valid),
       .exit_valid(dec_exit_valid)
+  );
+
+  mfsr_read_unit mfsr_read_unit_inst (
+      .mfsr_sel(mfsr_sel),
+//    .warp_id(warp_id),
+      .active_mask(active_mask_o),
+      .mfsr_data(mfsr_data)
   );
 
   genvar i;
@@ -216,6 +225,7 @@ module core_validation_top #(
           .rs2_i(rs2_i),
           .p_i(p_i),
           .preg_we(preg_we_o),
+          .mfsr_in(mfsr_data[i]),
           .imm(imm),
           .cond(cond),
           .lane_active(active_mask_o[i]),

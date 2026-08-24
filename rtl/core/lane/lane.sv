@@ -9,6 +9,7 @@ module lane ( // commented out the mem stuff because determining them at a lane 
     input logic [4:0] rd_i, rs1_i, rs2_i,  // for load/store rb = rs1; i for index
     input logic [2:0] p_i,
     input logic preg_we,
+    input logic [DATA_W-1:0] mfsr_in,
     input logic [DATA_W-1:0] imm,
     input logic [2:0] cond,
     input logic lane_active,
@@ -88,6 +89,7 @@ module lane ( // commented out the mem stuff because determining them at a lane 
       case (wb_sel)
         ALU_RESULT: w_data = alu_res;
         IMM_RESULT: w_data = imm;
+        WB_MFSR: w_data = mfsr_in;
         default: w_data = 0;
       endcase
     end

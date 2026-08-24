@@ -9,7 +9,8 @@ opcodes = {"add" : 0,
            "brap" : 6,
            "rcnv" : 7,
            "mov" : 8,
-           "exit" : 9}
+           "exit" : 9,
+           "mfsr" : 10}
 
 INSTR_WIDTH = 32
 REGS_NUM = 32
@@ -20,4 +21,11 @@ CONDITION_CODES = {"lt" : 1,
                    "eq" : 2,
                    "gt" : 4}
 
-INSTRUCTIONS = ["add", "mul", "ldg", "stg", "bra", "pred", "brap", "rcnv", "mov", "exit"]
+MFSR_SEL = {
+    "laneid" : 0,
+    "warpid" : 1,
+    "tid" : 2,
+    "lanemask_lt" : 3,
+    "activemask" : 4}
+
+INSTRUCTIONS = ["add", "mul", "ldg", "stg", "bra", "pred", "brap", "rcnv", "mov", "exit", "mfsr"]
