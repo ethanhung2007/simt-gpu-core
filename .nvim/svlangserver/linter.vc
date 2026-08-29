@@ -1,0 +1,13 @@
+-v /home/ethan/Documents/Projects/simt-gpu-core/rtl/common/simt_defs.sv
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/common
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/core
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/core/lane
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/core/warp
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/memory
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/top
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/common
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/core
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/core/lane
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/core/warp
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/memory
++incdir+/home/ethan/Documents/Projects/simt-gpu-core/rtl/top
