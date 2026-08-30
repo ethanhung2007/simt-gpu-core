@@ -9,8 +9,9 @@ module instr_buffer (
     input logic [$clog2(NUM_WARPS)-1:0] issue_warp,
     input logic [$clog2(NUM_WARPS)-1:0] redir_warp,
     input logic redir_val,
-    input logic warp_done [NUM_WARPS-1:0],
+    input logic warp_done[NUM_WARPS-1:0],
     output logic [DATA_W-1:0] instr_addr_o,  // goes to instr_mem
+    output logic [DATA_W-1:0] instr_pc_o[NUM_WARPS-1:0],
     output logic [DATA_W-1:0] instr_o[NUM_WARPS-1:0],
     output logic empty_instr[NUM_WARPS-1:0],
     output logic advance_val,
@@ -26,6 +27,8 @@ module instr_buffer (
   logic [$clog2(BUFFER_DEPTH):0] counter[NUM_WARPS-1:0];
   logic buffer_full[NUM_WARPS-1:0];  // 1 if full
   logic buffer_empty[NUM_WARPS-1:0];  // 1 if empty
+  logic [DATA_W-1:0] pc_warp_buffer[NUM_WARPS-1:0][BUFFER_DEPTH-1:0];
+  logic [DATA_W-1:0] pending_pc;
 
   // warp related signals
   logic [$clog2(NUM_WARPS)-1:0] cur_warp;
@@ -39,6 +42,7 @@ module instr_buffer (
       cur_warp <= 0;
       fetch_pending <= 0;
       pending_warp <= 0;
+      pending_pc <= 0;
       for (int i = 0; i < NUM_WARPS; i++) begin
         write_pointer[i] <= 0;
         read_pointer[i] <= 0;
@@ -46,11 +50,15 @@ module instr_buffer (
       end
     end else begin
       fetch_pending <= advance_val;
-      if (advance_val) pending_warp <= advance_warp;
+      if (advance_val) begin
+        pending_warp <= advance_warp;
+        pending_pc   <= instr_addr_o;
+      end
 
       if (fetch_pending && (pending_warp != redir_warp || !redir_val) && !warp_done[pending_warp]) begin
         instr_warp_buffer[pending_warp][write_pointer[pending_warp]] <= instr_i;
         write_pointer[pending_warp] <= write_pointer[pending_warp] + 1;
+        pc_warp_buffer[pending_warp][write_pointer[pending_warp]] <= pending_pc;
       end
 
       if (redir_val) begin
@@ -89,9 +97,11 @@ module instr_buffer (
       if (buffer_empty[i]) begin
         empty_instr[i] = 1;
         instr_o[i] = 0;
+        instr_pc_o[i] = 0;
       end else begin
         empty_instr[i] = 0;
         instr_o[i] = instr_warp_buffer[i][read_pointer[i]];
+        instr_pc_o[i] = pc_warp_buffer[i][read_pointer[i]];
       end
     end
   end
