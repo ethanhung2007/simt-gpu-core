@@ -14,8 +14,9 @@ module warp_control (
     input logic [NUM_LANES-1:0] pred_vec,
     output logic done,
     output logic stalled,
-    output logic [DATA_W-1:0] pc,
     output logic [NUM_LANES-1:0] active_mask,
+    output logic redir_val,
+    output logic [DATA_W-1:0] redir_pc,
     output logic error
 );
 
@@ -73,7 +74,6 @@ module warp_control (
 
   always_ff @(posedge clk) begin
     if (rst) begin
-      pc <= '0;  // starting pc set as 0 for now
       active_mask <= {NUM_LANES{1'b1}};
       done <= '0;
       state <= NORMAL;
@@ -85,46 +85,39 @@ module warp_control (
     end else if (!external_stall) begin
       state <= next_state;
       if (state == NORMAL) begin
-        if (branch_valid) begin
-          if (branch_predicated) begin
-            brap_target_pc <= exec_pc + (branch_target_off << 2); // offsets are encoded in 32 bit instruction units
-            brap_fallthrough_pc <= exec_pc + 4;
-            brap_reconv_pc <= exec_pc + (branch_reconv_off << 2);
-            taken_mask <= active_mask & pred_vec;
-            fallthrough_mask <= active_mask & (~pred_vec);
-          end else begin
-            pc <= exec_pc + (branch_target_off << 2);
-          end
+        if (branch_valid && branch_predicated) begin
+          brap_target_pc <= exec_pc + (branch_target_off << 2);
+          brap_fallthrough_pc <= exec_pc + 4;
+          brap_reconv_pc <= exec_pc + (branch_reconv_off << 2);
+
+          taken_mask <= active_mask & pred_vec;
+          fallthrough_mask <= active_mask & ~pred_vec;
+
         end else if (exit_valid) begin
           done <= 1;
           active_mask <= '0;
-        end else
-        if (rcnv_valid) begin
-        end else begin
-          pc <= pc + 4;
         end
+
       end else if (state == BRAP_RESOLVE) begin
         if (!stack_full) begin
-          if (taken_mask == 0) pc <= brap_fallthrough_pc;
-          else if (fallthrough_mask == 0) pc <= brap_target_pc;
-          else begin
+          if (taken_mask != '0 && fallthrough_mask != '0) begin
             active_mask <= taken_mask;
-            pc <= brap_target_pc;
           end
         end
+
       end else if (state == RCNV_RESOLVE) begin
         if (!stack_empty) begin
-          if (top_entry.deferred_valid == 1) begin
-            pc <= top_entry.deferred_pc;
+          if (top_entry.deferred_valid) begin
             active_mask <= top_entry.deferred_mask;
           end else begin
-            pc <= top_entry.reconv_pc;
             active_mask <= top_entry.reconv_mask;
           end
         end
+
       end else if (state == ERROR) begin
         done <= 1;
         active_mask <= '0;
+
       end else if (state == DONE) begin
         done <= 1;
         active_mask <= '0;
@@ -139,31 +132,54 @@ module warp_control (
     stack_op = 1;
     push_entry = '0;
     error = (state == ERROR);
+    redir_pc = 0;
+    redir_val = 0;
 
     if (!external_stall) begin
-      if (state == BRAP_RESOLVE && taken_mask != '0 && fallthrough_mask != '0) begin
+      if (state == NORMAL && branch_valid && !branch_predicated) begin
+        redir_val = 1'b1;
+        redir_pc  = exec_pc + (branch_target_off << 2);
+
+      end else if (state == BRAP_RESOLVE) begin
         if (!stack_full) begin
-          stack_op = 1;
-          push_entry.deferred_valid = 1;
-          push_entry.deferred_pc = brap_fallthrough_pc;
-          push_entry.deferred_mask = fallthrough_mask;
-          push_entry.reconv_pc = brap_reconv_pc;
-          push_entry.reconv_mask = active_mask;
-          stack_en = 1;
+          redir_val = 1'b1;
+
+          if (taken_mask == '0) redir_pc = brap_fallthrough_pc;
+          else redir_pc = brap_target_pc;
+
+          if (taken_mask != '0 && fallthrough_mask != '0) begin
+            stack_op = 1;
+            stack_en = 1;
+
+            push_entry.deferred_valid = 1;
+            push_entry.deferred_pc = brap_fallthrough_pc;
+            push_entry.deferred_mask = fallthrough_mask;
+            push_entry.reconv_pc = brap_reconv_pc;
+            push_entry.reconv_mask = active_mask;
+
+          end else if (taken_mask != '0 || fallthrough_mask != '0) begin
+            stack_op = 1;
+            stack_en = 1;
+
+            push_entry.deferred_valid = 0;
+            push_entry.reconv_pc = brap_reconv_pc;
+            push_entry.reconv_mask = active_mask;
+          end
         end
-      end else if (state == BRAP_RESOLVE && (taken_mask != '0 || fallthrough_mask != '0)) begin
-        if (!stack_full) begin
-          stack_op = 1;
-          push_entry.deferred_valid = 0;
-          push_entry.reconv_pc = brap_reconv_pc;
-          push_entry.reconv_mask = active_mask;
-          stack_en = 1;
-        end
+
       end else if (state == RCNV_RESOLVE) begin
         if (!stack_empty) begin
+          redir_val = 1'b1;
+
+          if (top_entry.deferred_valid) begin
+            redir_pc = top_entry.deferred_pc;
+            stack_op = 2;
+          end else begin
+            redir_pc = top_entry.reconv_pc;
+            stack_op = 0;
+          end
+
           stack_en = 1;
-          if (top_entry.deferred_valid == 1) stack_op = 2;
-          else stack_op = 0;
         end
       end
     end

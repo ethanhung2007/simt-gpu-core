@@ -4,6 +4,7 @@ module scheduler (
     input logic clk,
     input logic rst,
     input logic ready_i[NUM_WARPS-1:0],
+    input logic issue_accept_i,
     output logic issue_val_o,
     output logic [$clog2(NUM_WARPS)-1:0] issue_warp_o
 );
@@ -15,7 +16,7 @@ module scheduler (
   always_ff @(posedge clk) begin
     if (rst) begin
       rr_ptr <= 0;
-    end else if (issue_val_o) begin
+    end else if (issue_accept_i) begin
       if (issue_warp_o == NUM_WARPS - 1) rr_ptr <= 0;
       else rr_ptr <= issue_warp_o + 1;
     end

@@ -6,6 +6,7 @@ module lane ( // commented out the mem stuff because determining them at a lane 
 //  input logic mem_we_i,  // 1 for store, 0 for load
     input logic mem_op,  // 1 if mem op, 0 if not
     input logic alu_op,  // 1 for mul, 0 for add  
+    input logic [$clog2(NUM_WARPS)-1:0] warp_i,
     input logic [4:0] rd_i, rs1_i, rs2_i,  // for load/store rb = rs1; i for index
     input logic [2:0] p_i,
     input logic preg_we,
@@ -47,6 +48,7 @@ module lane ( // commented out the mem stuff because determining them at a lane 
       .clk(clk),
       .we(lane_reg_we),
       .data(w_data),
+      .warp_i(warp_i),
       .rd(rd_i),
       .rs1(rs1_i),
       .rs2(rs2_i),
@@ -65,6 +67,7 @@ module lane ( // commented out the mem stuff because determining them at a lane 
   lane_preg_file preg_file (
       .rst(rst),
       .clk(clk),
+      .warp_i(warp_i),
       .we(lane_preg_we),
       .pdata(p_res),
       .prd(p_i),

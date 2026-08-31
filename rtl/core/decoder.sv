@@ -21,7 +21,10 @@ module decoder (
     output logic [DATA_W-1:0] branch_target_off,
     output logic [DATA_W-1:0] branch_reconv_off,
     output logic rcnv_valid,
-    output logic exit_valid
+    output logic exit_valid,
+    output logic uses_rs1,
+    output logic uses_rs2,
+    output logic uses_preg
 );
 
   logic [3:0] opcode;
@@ -49,6 +52,9 @@ module decoder (
     rcnv_valid = 0;
     exit_valid = 0;
     mfsr_sel = 0;
+    uses_rs1 = 0;
+    uses_rs2 = 0;
+    uses_preg = 0;
 
     case (opcode)
       OP_ADD: begin
@@ -56,6 +62,8 @@ module decoder (
         rs1_i = instr[22:18];
         rs2_i = instr[17:13];
         reg_we = 1;
+        uses_rs1 = 1;
+        uses_rs2 = 1;
       end
       OP_MUL: begin
         alu_op = 1;
@@ -63,6 +71,8 @@ module decoder (
         rs1_i = instr[22:18];
         rs2_i = instr[17:13];
         reg_we = 1;
+        uses_rs1 = 1;
+        uses_rs2 = 1;
       end
       OP_LDG: begin
         mem_op = 1;
@@ -72,6 +82,7 @@ module decoder (
         op2_sel = 0;
         reg_we = 1;
         wb_sel = MEM_DATA;
+        uses_rs1 = 1;
       end
       OP_STG: begin
         mem_we_i = 1;
@@ -80,6 +91,8 @@ module decoder (
         rs2_i = instr[27:23];
         imm = {{14{instr[17]}}, instr[17:0]};
         op2_sel = 0;
+        uses_rs1 = 1;
+        uses_rs2 = 1;
       end
       OP_BRA: begin
         branch_target_off = {{4{instr[27]}}, instr[27:0]};
@@ -92,6 +105,8 @@ module decoder (
         cond = instr[14:12];
         op2_sel = 1;
         preg_we = 1;
+        uses_rs1 = 1;
+        uses_rs2 = 1;
       end
       OP_BRAP: begin
         p_i = instr[27:25];
@@ -99,6 +114,7 @@ module decoder (
         branch_reconv_off = {{20{instr[12]}}, instr[12:1]};
         branch_valid = 1;
         branch_predicated = 1;
+        uses_preg = 1;
       end
       OP_RCNV: begin
         rcnv_valid = 1;
