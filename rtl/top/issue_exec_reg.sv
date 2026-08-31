@@ -1,6 +1,6 @@
 import simt_defs::*;
 
-module issue_execute_reg (
+module issue_exec_reg (
     input logic clk,
     input logic rst,
     input logic issue_valid_i,
